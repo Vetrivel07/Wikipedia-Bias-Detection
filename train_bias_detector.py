@@ -7,7 +7,7 @@ from sklearn.metrics import classification_report
 import joblib
 
 # Load + basic clean
-data = pd.read_excel("D:\\Semesters\\sem2\\ISTE_612_InfoReterival\\project\\wikipedia_bias_detection\\data\\wikipedia_10000_bias_dataset.xlsx")
+data = pd.read_excel("<--- your file path ---->")
 data = data.drop(columns=["Unnamed: 0", "title", "political_bias"], errors="ignore")
 data["text"] = data["text"].astype(str)
 
