@@ -18,7 +18,7 @@ This stack was selected to prioritize fast inference, lightweight deployment, in
 ## 2. Process (Data Loading Workflow)
  - The system operates using a structured pipeline for both offline model training and online inference inside the Flask application.
  - first built a dataset consisting of Wikipedia article excerpts, which were weak-labeled using a Hugging Face `finiteautomata/bertweet-base-sentiment-analysis` model for initial polarity signals.
-
+---
 
 ## 3. Web Application Workflow
 
@@ -50,25 +50,20 @@ This application supports multiple informative and interactive analysis modes:
 
 - Full-text bias detection:
 Returns the dominant bias class along with weighted class probabilities.
-
 - Bias-strength scoring:
 Measures combined positive + negative bias probability as a % indicator.
-
 - Paragraph-level analysis:
 Automatically splits article into meaningful segments and highlights:
     - per-paragraph bias label
     - per-paragraph bias probability distribution
     - local bias strength
     - preview text for explanation
-
 - Sentiment analysis:
 Determines emotional tone using VADER’s negative/neutral/positive scoring.
-
 - Word cloud visualization:
 Extracts and displays top keywords from the article to show topic distribution.
 
 These features provide users with a comprehensive understanding of both bias direction and linguistic tone, closely reflecting real-world media analysis tools.
-
 ---
 
 ## 6. Model Reliability & Background
