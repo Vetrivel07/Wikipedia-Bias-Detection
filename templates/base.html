@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Wikipedia Bias & Sentiment{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="navbar">
+      <div class="brand">
+        <h1>Wikipedia Bias Detection</h1>
+      </div>
+
+      <div class="nav-links">
+        <a href="{{ url_for('home') }}"
+          class="nav-link {% if request.path == '/' %}active{% endif %}">
+          Home
+        </a>
+        <a href="{{ url_for('metrics') }}"
+          class="nav-link {% if request.path.startswith('/metrics') %}active{% endif %}">
+          Model metrics &amp; evaluation
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  function toggleParagraphModal() {
+    const m = document.getElementById('para-modal');
+    if (!m) return;
+    m.classList.toggle('show');
+  }
+
+  // close when clicking on the dark background
+  document.addEventListener('click', function (e) {
+    const m = document.getElementById('para-modal');
+    if (!m || !m.classList.contains('show')) return;
+    if (e.target === m) {
+      m.classList.remove('show');
+    }
+  });
+</script>
+
+</html>

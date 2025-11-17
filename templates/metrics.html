@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Model Metrics & Evaluation{% endblock %}
+
+{% block content %}
+
+<!-- Intro card -->
+<div class="card">
+  <h2>Model Metrics & Evaluation</h2>
+  <p>
+    This page summarizes the performance of the models used in the web app:
+    the TF-IDF + Logistic Regression bias classifier and the BERTweet sentiment
+    baseline used as the Baseline model.
+  </p>
+</div>
+
+<!-- CARD 1: LR report + LR confusion matrix -->
+{% if lr_report %}
+<div class="card">
+  <div class="card-grid">
+    <div class="card-left">
+      <h3>Bias classifier (TF-IDF + Logistic Regression)</h3>
+      <p class="muted">
+        Classification report on the held-out test set (20% of 10,000 Wikipedia articles).
+      </p>
+      <pre class="mono">{{ lr_report }}</pre>
+    </div>
+
+    <div class="card-right">
+      <h4 class="chart-title">Confusion matrix</h4>
+      <img
+        src="{{ url_for('static', filename='metrics/bias_confusion_lr.png') }}"
+        alt="Bias confusion matrix"
+        style="display:block; width:100%; height:auto;">
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <h3>Bias classifier (TF-IDF + Logistic Regression)</h3>
+  <pre class="mono">lr_report.txt not found. Run evaluate_models.py to generate it.</pre>
+</div>
+{% endif %}
+
+
+<!-- CARD 2: BERTweet report + BERTweet confusion matrix -->
+{% if teacher_report %}
+<div class="card">
+  <div class="card-grid">
+    <div class="card-left">
+      <h3>BERTweet (Baseline Model)</h3>
+      <p class="muted" style="font-size:12px;">
+        HuggingFace BERTweet model (finiteautomata/bertweet-base-sentiment-analysis)
+        used to generate the sentiment-derived labels for the dataset.
+      </p>
+      <pre class="mono">{{ teacher_report }}</pre>
+    </div>
+
+    <div class="card-right">
+      <h4 class="chart-title">Confusion matrix</h4>
+      <img
+        src="{{ url_for('static', filename='metrics/bias_confusion_teacher.png') }}"
+        alt="Confusion matrix BERTweet"
+        style="display:block; width:100%; height:auto;">
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <h3>Baseline model – BERTweet sentiment</h3>
+  <pre class="mono">teacher_report.txt not found. Run evaluate_models.py to generate it.</pre>
+</div>
+{% endif %}
+
+<!-- CARD 3: model comparison chart -->
+<div class="card">
+  <h3>Model comparison</h3>
+  <p class="muted">
+    Bar chart comparing accuracy and macro F1 scores of the bias classifier
+    and the BERTweet baseline.
+  </p>
+  <img
+    src="{{ url_for('static', filename='metrics/model_comparison.png') }}"
+    alt="Model comparison"
+    style="max-width:100%;">
+  
+</div>
+<div class="card">
+  <h3>Summary and Model Selection</h3>
+  <p>
+    The TF-IDF + Logistic Regression classifier is the primary model used for 
+    bias detection in this project. It is trained directly on the labeled dataset 
+    and evaluated using standard metrics such as accuracy, macro F1, precision, 
+    and recall. The model achieves balanced performance across all three bias 
+    categories (Negative, Neutral, Positive), making it reliable for deployment 
+    inside the web application.
+  </p>
+
+  <p>
+    The BERTweet model shown in the metrics page is <b>not a competing model</b>. 
+    It appears with perfect scores because it was used as the original 
+    label-generating system during dataset creation. Since it is evaluated on 
+    labels it produced itself, its numbers simply represent an upper bound rather 
+    than a fair comparison to the trained Logistic Regression model.
+  </p>
+
+  <p>
+    In practice, the Logistic Regression classifier is the only model 
+    <b>actually trained, optimized, and used</b> within the application. 
+    Its strong performance, simplicity, generalization, and interpretability 
+    make it the most suitable choice for real-world use.
+  </p>
+</div>
+
+{% endblock %}

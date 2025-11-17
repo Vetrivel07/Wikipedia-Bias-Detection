@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Wikipedia Bias Detection{% endblock %}
+
+{% block content %}
+<form method="POST" class="card">
+  <label for="text" class="label">Paste Wikipedia article text</label>
+  <textarea id="text" name="text" placeholder="Paste a Wikipedia article or paragraph...">{{ text }}</textarea>
+  <div class="actions">
+    <button type="submit" class="btn" name="action" value="analyze">Analyze</button>
+    <button type="submit" class="btn light" name="action" value="clear">Clear</button>
+  </div>
+</form>
+
+{% if result %}
+<div class="grid">
+  <!-- CARD 1: Bias + Bias chart -->
+  <div class="card">
+  <div class="card-grid">
+
+    <!-- LEFT: Bias info -->
+    <div>
+      <div class="card-header">
+        <h3>Overall Bias Analysis (Full Text)</h3>
+        <span class="info-icon">i
+          <span class="info-tooltip">
+            Uses a TF-IDF + calibrated logistic regression model trained on labeled text
+            to estimate overall bias of the full article as Neutral, Positive Bias, or
+            Negative Bias.
+          </span>
+        </span>
+      </div>
+      
+      <p><b>Label:</b>
+        {% if result.bias.label == "NEUTRAL" %}
+          <span class="ok">Neutral</span>
+        {% elif result.bias.label == "POSITIVE" %}
+          <span class="warn">Biased (Positive Bias)</span>
+        {% elif result.bias.label == "NEGATIVE" %}
+          <span class="warn">Biased (Negative Bias)</span>
+        {% else %}
+          <span>{{ result.bias.label }}</span>
+        {% endif %}
+      </p>
+
+      <p><b>Biased (total):</b> {{ result.bias.bias_strength_pct }}%</p>
+
+      <h4>Categorize (Probabilities %)</h4>
+      <table class="kv">
+        <tr><th>Neutral</th><td>{{ result.bias.class_probas_pct['NEUTRAL'] }}%</td></tr>
+        <tr><th>Positive Bias</th><td>{{ result.bias.class_probas_pct['POSITIVE'] }}%</td></tr>
+        <tr><th>Negative Bias</th><td>{{ result.bias.class_probas_pct['NEGATIVE'] }}%</td></tr>
+      </table>
+    </div>
+
+    <!-- RIGHT: Bias graph -->
+    <div>
+      <h4 class="chart-title">Bias Probability Distribution</h4>
+      {% if bias_plot %}
+        <img src="data:image/png;base64,{{ bias_plot }}"
+             alt="Bias chart"
+             style="display:block; width:100%; height:auto;">
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+  <!-- CARD 2: Paragraph-level Bias + chart -->
+  <div class="card">
+  <div class="card-grid">
+
+    <!-- LEFT: Paragraph bias info -->
+    <div>
+      <div class="card-header">
+        <h3>Paragraph-Level Bias Analysis</h3>
+        <span class="info-icon">i
+          <span class="info-tooltip">
+            Runs the bias model on each paragraph independently, then averages the class probabilities (mean of Neutral / Positive Bias / Negative Bias). 
+            This helps detect local bias patterns that may not appear in the full-text result.
+          </span>
+        </span>
+      </div>
+
+      <p><b>Label:</b>
+        {% if result.paragraph_bias.label == "NEUTRAL" %}
+          <span class="ok">Neutral</span>
+        {% elif result.paragraph_bias.label == "POSITIVE" %}
+          <span class="warn">Biased (Positive Bias)</span>
+        {% elif result.paragraph_bias.label == "NEGATIVE" %}
+          <span class="warn">Biased (Negative Bias)</span>
+        {% else %}
+          <span>{{ result.paragraph_bias.label }}</span>
+        {% endif %}
+      </p>
+
+      <p><b>Biased (total):</b> {{ result.paragraph_bias.bias_strength_pct }}%</p>
+
+      <h4>Categorize (Probabilities %)</h4>
+      <table class="kv">
+        <tr><th>Neutral</th><td>{{ result.paragraph_bias.class_probas_pct['NEUTRAL'] }}%</td></tr>
+        <tr><th>Positive Bias</th><td>{{ result.paragraph_bias.class_probas_pct['POSITIVE'] }}%</td></tr>
+        <tr><th>Negative Bias</th><td>{{ result.paragraph_bias.class_probas_pct['NEGATIVE'] }}%</td></tr>
+      </table>
+    </div>
+
+    <!-- RIGHT: Paragraph bias graph -->
+    <div>
+      <h4 class="chart-title">Paragraph-Weighted Bias Distribution</h4>
+      {% if para_plot %}
+        <img src="data:image/png;base64,{{ para_plot }}"
+             alt="Paragraph bias chart"
+             style="display:block; width:100%; height:auto;">
+      {% endif %}
+    </div>
+
+  </div>
+  <button type="button"
+        class="btn light"
+        onclick="toggleParagraphModal()">
+  View paragraph details
+</button>
+
+</div>
+  <!-- CARD 3: Sentiment + chart -->
+  <div class="card">
+  <div class="card-grid">
+
+    <!-- LEFT: Sentiment info -->
+    <div>
+      <div class="card-header">
+        <h3>Sentiment Analysis</h3>
+        <span class="info-icon">i
+          <span class="info-tooltip">
+            Uses the VADER sentiment model to score the text as Negative, Neutral, or Positive. 
+            Percentages are derived from VADER’s rule-based lexicon and reflect overall emotional tone.
+          </span>
+        </span>
+      </div>
+
+      <p><b>Label:</b>
+        {% if result.sentiment.label == "Positive" %}
+          <span class="ok">{{ result.sentiment.label }}</span>
+        {% elif result.sentiment.label == "Negative" %}
+          <span class="warn">{{ result.sentiment.label }}</span>
+        {% else %}
+          <span class="ok">{{ result.sentiment.label }}</span>
+        {% endif %}
+      </p>
+
+      <table class="kv">
+        <tr><th>Neutral</th><td>{{ result.sentiment.percentages.neu }}</td></tr>
+        <tr><th>Positive</th><td>{{ result.sentiment.percentages.pos }}</td></tr>
+        <tr><th>Negative</th><td>{{ result.sentiment.percentages.neg }}</td></tr>
+        
+      </table>
+    </div>
+
+    <!-- RIGHT: Sentiment graph -->
+    <div>
+      <h4 class="chart-title">Sentiment Probability Distribution</h4>
+      {% if sent_plot %}
+        <img src="data:image/png;base64,{{ sent_plot }}"
+             alt="Sentiment chart"
+             style="display:block; width:100%; height:auto;">
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Paragraph details modal -->
+<div id="para-modal" class="modal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="toggleParagraphModal()">&times;</span>
+    <h3>Paragraph-level Bias Details</h3>
+    <p class="muted">Each paragraph’s individual bias prediction.</p>
+
+    {% if paragraph_details %}
+      <ol class="paragraph-list">
+        {% for p in paragraph_details %}
+          <li>
+            <p><b>Paragraph {{ p.index }}</b> –
+              {% if p.label == "NEUTRAL" %}
+                <span class="ok">Neutral</span>
+              {% elif p.label == "POSITIVE" %}
+                <span class="warn">Biased (Positive Bias)</span>
+              {% elif p.label == "NEGATIVE" %}
+                <span class="warn">Biased (Negative Bias)</span>
+              {% else %}
+                {{ p.label }}
+              {% endif %}
+              (biased total: {{ p.bias_strength_pct }}%)
+            </p>
+            <p class="muted">{{ p.preview }}</p>
+            <table class="kv">
+              <tr><th>Neutral</th><td>{{ p.class_probas_pct['NEUTRAL'] }}%</td></tr>
+              <tr><th>Positive Bias</th><td>{{ p.class_probas_pct['POSITIVE'] }}%</td></tr>
+              <tr><th>Negative Bias</th><td>{{ p.class_probas_pct['NEGATIVE'] }}%</td></tr>
+            </table>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p>No paragraph details available.</p>
+    {% endif %}
+  </div>
+</div>
+
+
+<!-- Word cloud full-width card -->
+<div class="card">
+  <h3>Word Cloud</h3>
+  <p class="muted">High-Frequency Terms Found in the Text</p>
+  {% if wordcloud %}
+    <img src="data:image/png;base64,{{ wordcloud }}"
+         alt="Word cloud"
+         style="display:block; width:100%; height:auto;">
+  {% endif %}
+</div>
+{% endif %}
+
+{% if error %}
+<p class="warn" style="margin-top:10px;">{{ error }}</p>
+{% endif %}
+
+{% endblock %}

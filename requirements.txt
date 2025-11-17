@@ -1,0 +1,9 @@
+flask
+scikit-learn
+joblib
+nltk
+openpyxl
+torch
+transformers
+matplotlib
+wordcloud
