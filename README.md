@@ -84,7 +84,6 @@ This mirrors production-oriented ML deployments where traceability, explainabili
 
 **Requirements:**  
 - Python 3.8+  
-- MongoDB running locally (default port `27017`)  
 - All model files present in `/models`
 
 
@@ -109,7 +108,7 @@ python app.py
 
 ### Step 4 — Open the application in your browser
 ```
-http://localhost:3000
+http://localhost:5000
 ```
 You can now:
 
